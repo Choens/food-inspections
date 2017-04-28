@@ -17,7 +17,7 @@ library(tidyr)
 ## To learn more about using th Socrata API with this data set:
 ## https://dev.socrata.com/foundry/health.data.ny.gov/f285-x9ha
 ## This takes a second or two to download. R may appear to freeze. Just wait.
-inspections <- read.socrata("https://health.data.ny.gov/resource/f285-x9ha.json?$$app_token=YOU_APP_TOKEN")
+inspections <- read.socrata("https://health.data.ny.gov/resource/f285-x9ha.json?$$app_token=H19RFprGJdx021RQkSuKczYjn")
 
 
 
