@@ -1,0 +1,145 @@
+---
+title: "Food Inspections Report"
+author: Andy Choens
+date: April 28, 2017
+output: 
+    html_document:
+        toc: true
+        depth: 1
+---
+
+# About
+
+```{r init, echo=FALSE, message=FALSE, warning=FALSE}
+
+## PACKAGES ----------------------------
+## Adding the message=FALSE and warning=FALSE prevents dplyr's
+## start-up messages do not become part of the final report.
+library(choroplethr)
+library(choroplethrZip)
+library(dplyr)
+library(pander)
+library(rmarkdown)
+
+## DATA --------------------------------
+load("data/inspections.Rda")
+
+## LOCAL VARS --------------------------
+data_date <- as.character( unique(inspections$data_date), format="%m/%d/%Y")
+
+```
+
+This is a simple demonstrates the power and flexibility of RMarkdown
+to produce integrated, reproducible reports. The code to produce all
+of the tables, charts, etc. in this document are embedded in the
+food-inspection-report.Rmd file.
+
+New York State, and other states, regularly performs inspections of
+establishments serving food to the public. The data to run this report
+was downloaded from
+the
+[NYS Open Data](https://dev.socrata.com/foundry/health.data.ny.gov/f285-x9ha) site
+on `r data_date`. On that date, 
+`r format(nrow(inspections), big.mark=",")` 
+inspections were downloaded.
+
+This report intends to answer two question: 
+
+- Which county has the highest number of violations, and 
+- Which county has the highest violation rate?
+
+# Violations
+
+For the purposes of this report, the number of violations reported by
+county is the total of critical and non-critical food-safety
+violations reported. The violation rate is calculated as the
+percentage of food inspections which resulted in at least one
+food-safety violation.
+
+## Most Violations
+
+The following table shows, by county, the total number of food
+inspections performed in the current data release and the total number
+of violations found. Below, the five counties from the current
+food-inspections data-set with the highest total number of violations.
+
+```{r violations, echo=FALSE}
+
+viol_tot_county <-
+    inspections %>%
+    group_by(county) %>%
+    summarize(n_insp          = n(),
+              tot_violations  = sum(total_violations)
+              ) %>%
+    arrange(desc(tot_violations)) %>%
+    select("County" = county,
+           "N Inspections"    = n_insp,
+           "Total Violations" = tot_violations)
+
+## This adds a comma to note the thousands.
+viol_tot_county[,"Total Violations"] <- format(viol_tot_county[,"Total Violations"], big.mark = ",")
+
+pander(viol_tot_county[1:5,],
+       caption = "Top five counties with the highest number of total violations",
+       justify="lrr")
+
+```
+
+## Violation Rate
+
+The following table shows, by county, the total number of food
+inspections performed in the current data release, and the violation
+rate. The violation rate is defined as the percentage of
+food-inspections which find at least one violation. Below, the five
+counties with the highest rate of violations. It should not suprise
+you if these are very similar to the previous table.
+
+```{r violation-rate, echo=FALSE}
+
+viol_rate_county <-
+    inspections %>%
+    group_by(county) %>%
+    summarize(n_insp          = n(),
+              rate_violations = round(100*sum(total_violations > 1) / n(),2)
+              )  %>%
+    arrange(desc(rate_violations)) %>%
+    select("County"         = county,
+           "N Inspections"    = n_insp,
+           "Violation Rate" = rate_violations)
+
+pander(viol_rate_county[1:5,],
+       caption = "Top five counties with the highest rate of violations",
+       justify="lrr")
+
+```
+
+We can visualize the this rate with the following map. Areas shown in
+black are areas not included in our data (or lakes).
+
+```{r violations-rate-map, echo=FALSE, message=FALSE, warning=FALSE}
+## Load the ZIP data from choroplethr.
+## And filter it down to New York only. This speeds things up.
+data(zip.regions)
+zip.regions <- filter(zip.regions, state.name == "new york")
+
+## Two intermediate steps.
+## The gis_data is a simple join between the inspections data and the
+## zip data.
+gis_data <- inner_join(inspections,
+                      zip.regions,
+                      by=c("zip_5"="region", "county"="county.name"))
+
+## The chor_data data frame is what actually gets mapped. The column names
+## MUST be region and value. Nothing else is allowed.
+chor_data <-
+    gis_data %>%
+    dplyr::group_by(region = zip_5) %>%
+    dplyr::summarize( value = sum(total_violations, na.rm=TRUE) )
+
+## This produces the actual map.
+zip_choropleth(chor_data, 
+               state_zoom = "new york",
+               title = "Distribution of Food Inspection Violations",
+               legend = "Violations")
+
+```
