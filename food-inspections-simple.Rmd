@@ -15,11 +15,9 @@ output:
 ## PACKAGES ----------------------------
 ## Adding the message=FALSE and warning=FALSE prevents dplyr's
 ## start-up messages do not become part of the final report.
-library(choroplethr)
-library(choroplethrZip)
-library(dplyr)
-library(pander)
-library(rmarkdown)
+library(dplyr, lib="~/lib")
+library(pander, lib="~/lib")
+library(rmarkdown, lib="~/lib")
 
 ## DATA --------------------------------
 load("data/inspections.Rda")
@@ -110,36 +108,5 @@ viol_rate_county <-
 pander(viol_rate_county[1:5,],
        caption = "Top five counties with the highest rate of violations",
        justify="lrr")
-
-```
-
-We can visualize the this rate with the following map. Areas shown in
-black are areas not included in our data (or lakes).
-
-```{r violations-rate-map, echo=FALSE, message=FALSE, warning=FALSE}
-## Load the ZIP data from choroplethr.
-## And filter it down to New York only. This speeds things up.
-data(zip.regions)
-zip.regions <- filter(zip.regions, state.name == "new york")
-
-## Two intermediate steps.
-## The gis_data is a simple join between the inspections data and the
-## zip data.
-gis_data <- inner_join(inspections,
-                      zip.regions,
-                      by=c("zip_5"="region", "county"="county.name"))
-
-## The chor_data data frame is what actually gets mapped. The column names
-## MUST be region and value. Nothing else is allowed.
-chor_data <-
-    gis_data %>%
-    dplyr::group_by(region = zip_5) %>%
-    dplyr::summarize( value = sum(total_violations, na.rm=TRUE) )
-
-## This produces the actual map.
-zip_choropleth(chor_data, 
-               state_zoom = "new york",
-               title = "Distribution of Food Inspection Violations",
-               legend = "Violations")
 
 ```

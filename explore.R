@@ -57,34 +57,10 @@ inspections_by_county <-
 pander(inspections_by_county)
 
 
-## Note: Considering the large sample size here, I would have expected those to be closer.
-
-## - This also calculates the percentage of winning numbers.
-## - Handles N count separately.
-## - Old-school function.
-round(prop.table(table(inspections$winning_numbers))*100,2)
-
-## Note: the percents are the same!
-
-## Why am I showing you two ways to do the same thing?
-## Both have their place. You will see both if you read R code on the Internet.
-
-
-
-## GRAPHICS ====================================================================
-
-## Draws a histogram, with a red line through it for the expected value of all
-## numbers if they are evenly distributed.
-hist(inspections$winning_numbers, breaks=0:40, freq = FALSE)
-abline(h = 1/39, col="red", lwd=3)
-
-## Note: Some of those do seem to deviate from the expected rate.
-
-
-
 ## GIS =========================================================================
 ## Yes, it is possible to do GIS work with R!
 ## Today, a choroplethr map.
+## This will only work if you were able to load the choroplether data package.
 
 ## Two intermediate steps.
 ## The gis_data is a simple join between the inspections data and the

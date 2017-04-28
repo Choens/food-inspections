@@ -5,5 +5,5 @@
 ##
 ## #############################################################################
 
-library(rmarkdown)
+library(rmarkdown, lib="~/lib")
 render("food-inspections-report.Rmd")

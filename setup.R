@@ -8,10 +8,11 @@
 packages <- c("devtools",
               "choroplethr",      
               "dplyr",
+              "pander",
               "tidyr",
               "rmarkdown",
               "RSocrata")
-install.packages(packages)
+install.packages(packages, lib="~/lib")
 
 ## This step will take a few minutes. We have to all download a big file or three.
 library(devtools)
